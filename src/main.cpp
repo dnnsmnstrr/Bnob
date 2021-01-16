@@ -66,39 +66,38 @@ void volumeUp();
 void volumeDown();
 
 bool isBleConnected = false;
+bool hasRotated = false;
 
 void rotary_loop() {
   //lets see if anything changed
   int16_t encoderDelta = rotaryEncoder.encoderChanged();
 
-  bool hasRotated = false;
 	//first lets handle rotary encoder button click
-  if (rotaryEncoder.currentButtonState() == BUT_DOWN && encoderDelta!=0) {
-    if (encoderDelta>0) {
-      sendKeyCode(0x4f); // left arrow
-    };
-    if (encoderDelta<0) {
-      sendKeyCode(0x50); // right arrow
-    };
-    hasRotated = true;
-  } else {
-    //for some cases we only want to know if value is increased or decreased (typically for menu items)
+  if (encoderDelta != 0) {
     for (int i = 0; i < abs(encoderDelta)/2; i++) {
-      if (encoderDelta>0) {
+      if (encoderDelta>0 && rotaryEncoder.currentButtonState() == BUT_DOWN) {
+        Serial.print("pressed left");
+        sendKeyCode(0x4f); // left arrow
+      } else if (encoderDelta<0 && rotaryEncoder.currentButtonState() == BUT_DOWN) {
+        Serial.print("pressed right");
+        sendKeyCode(0x50); // right arrow
+      } else if (encoderDelta>0) {
         Serial.print("+");
         volumeUp();
-      };
-      if (encoderDelta<0) {
+      } else {
         Serial.print("-");
         volumeDown();
       };
     }
+    hasRotated = true;
   }
 
-  if (rotaryEncoder.currentButtonState() == BUT_RELEASED) {
+  if (rotaryEncoder.currentButtonState() == BUT_RELEASED && !hasRotated) {
     //we can process it here or call separate function like:
-    Serial.print("pressed");
+    Serial.print("pressed") ;
     spaceBar();
+  } else if (rotaryEncoder.currentButtonState() == BUT_UP) {
+    hasRotated = false;
   }
 
 	//optionally we can ignore whenever there is no change
