@@ -54,7 +54,7 @@ GND - to microcontroler GND
 
 AiEsp32RotaryEncoder rotaryEncoder = AiEsp32RotaryEncoder(ROTARY_ENCODER_A_PIN, ROTARY_ENCODER_B_PIN, ROTARY_ENCODER_BUTTON_PIN, ROTARY_ENCODER_VCC_PIN);
 
-int test_limits = 2;
+int boundary_limits = 100;
 
 // Forward declarations
 void bluetoothTask(void*);
@@ -68,10 +68,9 @@ bool isBleConnected = false;
 
 void rotary_onButtonClick() {
 	//rotaryEncoder.reset();
-	//rotaryEncoder.disable();
-	rotaryEncoder.setBoundaries(-test_limits, test_limits, false);
-	test_limits *= 2;
-  playPause();
+	//rotaryEncoder.disable();       
+  // playPause();
+  spaceBar();
 }
 
 void rotary_loop() {
@@ -124,7 +123,8 @@ void setup() {
   	rotaryEncoder.begin();
   	rotaryEncoder.setup([]{rotaryEncoder.readEncoder_ISR();});
   	//optionally we can set boundaries and if values should cycle or not
-  	rotaryEncoder.setBoundaries(0, 10, true); //minValue, maxValue, cycle values (when max go to min and vice versa)
+  	rotaryEncoder.setBoundaries(-boundary_limits, boundary_limits, true); //minValue, maxValue, cycle values (when max go to min and vice versa)
+    rotaryEncoder.enable ();
 }
 
 
@@ -138,7 +138,6 @@ void loop() {
     }
     rotary_loop();
     delay(100);
-    if (millis()>20000) rotaryEncoder.enable ();
 }
 
 
@@ -158,8 +157,8 @@ struct OutputReport {
 // The report map describes the HID device (a keyboard in this case) and
 // the messages (reports in HID terms) sent and received.
 static const uint8_t REPORT_MAP[] = {
-    USAGE_PAGE(1),      0x0C,       // Generic Desktop Controls
-    USAGE(1),           0x01,       // Keyboard
+    USAGE_PAGE(1),      0x01,       // Generic Desktop Controls
+    USAGE(1),           0x06,       // Keyboard
     COLLECTION(1),      0x01,       // Application
     REPORT_ID(1),       0x01,       //   Report ID (1)
     USAGE_PAGE(1),      0x07,       //   Keyboard/Keypad
@@ -385,5 +384,5 @@ void volumeDown() {
 }
 
 void playPause() {
-  sendKeyCode(0x48);
+  sendKeyCode(0xe8);
 }
