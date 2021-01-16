@@ -59,6 +59,7 @@ int boundary_limits = 100;
 // Forward declarations
 void bluetoothTask(void*);
 void typeText(const char* text);
+void sendKeyCode(uint8_t keyCode);
 void spaceBar();
 void playPause();
 void volumeUp();
@@ -66,38 +67,42 @@ void volumeDown();
 
 bool isBleConnected = false;
 
-void rotary_onButtonClick() {
-	//rotaryEncoder.reset();
-	//rotaryEncoder.disable();       
-  // playPause();
-  spaceBar();
-}
-
 void rotary_loop() {
-	//first lets handle rotary encoder button click
-	if (rotaryEncoder.currentButtonState() == BUT_RELEASED) {
-		//we can process it here or call separate function like:
-		rotary_onButtonClick();
-	}
+  //lets see if anything changed
+  int16_t encoderDelta = rotaryEncoder.encoderChanged();
 
-	//lets see if anything changed
-	int16_t encoderDelta = rotaryEncoder.encoderChanged();
+  bool hasRotated = false;
+	//first lets handle rotary encoder button click
+  if (rotaryEncoder.currentButtonState() == BUT_DOWN && encoderDelta!=0) {
+    if (encoderDelta>0) {
+      sendKeyCode(0x4f); // left arrow
+    };
+    if (encoderDelta<0) {
+      sendKeyCode(0x50); // right arrow
+    };
+    hasRotated = true;
+  } else {
+    //for some cases we only want to know if value is increased or decreased (typically for menu items)
+    for (int i = 0; i < abs(encoderDelta)/2; i++) {
+      if (encoderDelta>0) {
+        Serial.print("+");
+        volumeUp();
+      };
+      if (encoderDelta<0) {
+        Serial.print("-");
+        volumeDown();
+      };
+    }
+  }
+
+  if (rotaryEncoder.currentButtonState() == BUT_RELEASED) {
+    //we can process it here or call separate function like:
+    Serial.print("pressed");
+    spaceBar();
+  }
 
 	//optionally we can ignore whenever there is no change
 	if (encoderDelta == 0) return;
-
-	//for some cases we only want to know if value is increased or decreased (typically for menu items)
-	if (encoderDelta>0) {
-    Serial.print("+");
-    volumeUp();
-  };
-	if (encoderDelta<0) {
-    Serial.print("-");
-    volumeDown();
-  };
-
-	//for other cases we want to know what is current value. Additionally often we only want if something changed
-	//example: when using rotary encoder to set termostat temperature, or sound volume etc
 
 	//if value is changed compared to our last read
 	if (encoderDelta!=0) {
@@ -106,6 +111,7 @@ void rotary_loop() {
 		//process new value. Here is simple output.
 		Serial.print("Value: ");
 		Serial.println(encoderValue);
+    Serial.println(encoderDelta);
 	}
 
 }
