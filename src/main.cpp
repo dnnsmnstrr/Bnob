@@ -73,14 +73,14 @@ void rotary_loop() {
   int16_t encoderDelta = rotaryEncoder.encoderChanged();
 
 	//first lets handle rotary encoder button click
-  if (encoderDelta != 0) {
+  if (encoderDelta != 0 && abs(encoderDelta) < boundary_limits) {
     for (int i = 0; i < abs(encoderDelta)/2; i++) {
       if (encoderDelta>0 && rotaryEncoder.currentButtonState() == BUT_DOWN) {
-        Serial.print("pressed left");
-        sendKeyCode(0x4f); // left arrow
-      } else if (encoderDelta<0 && rotaryEncoder.currentButtonState() == BUT_DOWN) {
         Serial.print("pressed right");
-        sendKeyCode(0x50); // right arrow
+        sendKeyCode(0x4f); // right arrow
+      } else if (encoderDelta<0 && rotaryEncoder.currentButtonState() == BUT_DOWN) {
+        Serial.print("pressed left");
+        sendKeyCode(0x50); // left arrow
       } else if (encoderDelta>0) {
         Serial.print("+");
         volumeUp();
